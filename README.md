@@ -103,7 +103,8 @@ Ruicheng Wang: <wrc0326@outlook.com>, Jialiang Zhang: <jackzhang0906@126.com>, H
 
 ## 📚 Citation
 
-If you find this project useful in your research, please consider citing:
+This project is built upon the [DexGraspNet](https://dexgraspnet.github.io/) framework.  
+If you use this code or dataset in your research, please cite the original work:
 
 ```bibtex
 @article{wang2022dexgraspnet,
@@ -111,4 +112,15 @@ If you find this project useful in your research, please consider citing:
   author={Wang, Ruicheng and Zhang, Jialiang and Chen, Jiayi and Xu, Yinzhen and Li, Puhao and Liu, Tengyu and Wang, He},
   journal={arXiv preprint arXiv:2210.02697},
   year={2022}
+}
+
+If you additionally use the modifications or extensions provided in this repository (e.g., LinkerHand L20 adaptation), please cite as:
+
+```bibtex
+@misc{your2026dexgraspnetl20,
+  author = {Li Juyang},
+  title = {DexGraspNet LinkerHand L20 Extension},
+  year = {2026},
+  howpublished = {\url{https://github.com/brantleeee/DexGraspNet_LinkerHand_l20}},
+  note = {GitHub repository}
 }
