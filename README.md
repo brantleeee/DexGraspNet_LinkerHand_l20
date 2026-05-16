@@ -115,6 +115,7 @@ If you use this code or dataset in your research, please cite the original work:
 }
 
 If you additionally use the modifications or extensions provided in this repository (e.g., LinkerHand L20 adaptation), please cite as:
+```
 
 ```bibtex
 @misc{your2026dexgraspnetl20,
@@ -124,3 +125,5 @@ If you additionally use the modifications or extensions provided in this reposit
   howpublished = {\url{https://github.com/brantleeee/DexGraspNet_LinkerHand_l20}},
   note = {GitHub repository}
 }
+```
+
