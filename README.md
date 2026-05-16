@@ -100,3 +100,15 @@ This work and the dataset are licensed under [CC BY-NC 4.0][cc-by-nc].
 If you have any questions, please open a github issue or contact us:
 
 Ruicheng Wang: <wrc0326@outlook.com>, Jialiang Zhang: <jackzhang0906@126.com>, He Wang: <hewang@pku.edu.cn>
+
+## 📚 Citation
+
+If you find this project useful in your research, please consider citing:
+
+```bibtex
+@article{wang2022dexgraspnet,
+  title={DexGraspNet: A Large-Scale Robotic Dexterous Grasp Dataset for General Objects Based on Simulation},
+  author={Wang, Ruicheng and Zhang, Jialiang and Chen, Jiayi and Xu, Yinzhen and Li, Puhao and Liu, Tengyu and Wang, He},
+  journal={arXiv preprint arXiv:2210.02697},
+  year={2022}
+}
