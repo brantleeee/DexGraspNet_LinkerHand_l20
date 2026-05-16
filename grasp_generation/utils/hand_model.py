@@ -1,0 +1,781 @@
+"""
+Last modified date: 2026.05.02
+Description: HandModel for LinkerHand L20 URDF in DexGraspNet (Fixed Joint Limits)
+"""
+
+import os
+import json
+import numpy as np
+import torch
+from utils.rot6d import robust_compute_rotation_matrix_from_ortho6d
+import pytorch_kinematics as pk
+import plotly.graph_objects as go
+import pytorch3d.structures
+import pytorch3d.ops
+import trimesh as tm
+from torchsdf import index_vertices_by_faces, compute_sdf
+# 🔥 新增导入，用于正确解析 URDF 限位
+from urdf_parser_py.urdf import URDF
+
+
+def resolve_mesh_file(mesh_path, mesh_name):
+    """
+    Resolve LinkerHand L20 mesh file from URDF visual.geom_param.
+    """
+    mesh_path = os.path.abspath(mesh_path)
+    raw_name = str(mesh_name).replace("\\", "/")
+
+    if raw_name.startswith("package://"):
+        raw_name = raw_name.replace("package://", "")
+
+    base_name = os.path.basename(raw_name)
+    stem, ext = os.path.splitext(base_name)
+
+    candidates = []
+
+    if os.path.isabs(raw_name):
+        candidates.append(raw_name)
+
+    candidates += [
+        os.path.join(mesh_path, raw_name),
+        os.path.join(mesh_path, base_name),
+        os.path.join(mesh_path, stem),
+        os.path.join(mesh_path, stem + ".STL"),
+        os.path.join(mesh_path, stem + ".stl"),
+        os.path.join(mesh_path, stem + ".OBJ"),
+        os.path.join(mesh_path, stem + ".obj"),
+    ]
+
+    seen = set()
+    unique_candidates = []
+    for p in candidates:
+        p = os.path.abspath(p)
+        if p not in seen:
+            seen.add(p)
+            unique_candidates.append(p)
+
+    for p in unique_candidates:
+        if os.path.exists(p):
+            return p
+
+    raise FileNotFoundError(
+        f"Cannot find mesh for {mesh_name}. Tried: {unique_candidates}"
+    )
+
+
+def parse_visual_mesh_param(geom_param):
+    """
+    pytorch_kinematics may expose URDF mesh geom_param as list or string
+    """
+    if isinstance(geom_param, (list, tuple)):
+        mesh_name = geom_param[0]
+        mesh_scale = geom_param[1] if len(geom_param) > 1 else None
+    else:
+        mesh_name = geom_param
+        mesh_scale = None
+
+    return mesh_name, mesh_scale
+
+
+class HandModel:
+    def __init__(
+        self,
+        model_path=None,
+        mjcf_path=None,
+        mesh_path=None,
+        contact_points_path=None,
+        penetration_points_path=None,
+        n_surface_points=0,
+        device='cpu',
+        force_mesh_sdf=True,
+    ):
+        if model_path is None:
+            model_path = mjcf_path
+
+        if model_path is None:
+            raise ValueError("model_path or mjcf_path must be provided.")
+
+        if mesh_path is None:
+            raise ValueError("mesh_path must be provided.")
+
+        model_path = os.path.abspath(model_path)
+        mesh_path = os.path.abspath(mesh_path)
+
+        if not model_path.endswith(".urdf"):
+            raise ValueError(
+                f"This LinkerHand L20 HandModel only supports URDF. Got: {model_path}"
+            )
+
+        self.device = device
+        self.model_path = model_path
+        self.mjcf_path = model_path
+        self.mesh_path = mesh_path
+        self.force_mesh_sdf = force_mesh_sdf
+
+        # ------------------------------------------------------------------
+        # Load URDF articulation
+        # ------------------------------------------------------------------
+        with open(model_path, "rb") as f:
+            urdf_data = f.read()
+
+        self.chain = pk.build_chain_from_urdf(urdf_data).to(
+            dtype=torch.float,
+            device=device
+        )
+
+        self.n_dofs = len(self.chain.get_joint_parameter_names())
+
+        if self.n_dofs == 0:
+            raise RuntimeError(
+                f"No movable joints found in URDF: {model_path}. "
+                "Check whether pytorch_kinematics can parse the URDF joints."
+            )
+
+        # ------------------------------------------------------------------
+        # Load contact and penetration points
+        # ------------------------------------------------------------------
+        contact_points = (
+            json.load(open(contact_points_path, 'r'))
+            if contact_points_path is not None else None
+        )
+
+        penetration_points = (
+            json.load(open(penetration_points_path, 'r'))
+            if penetration_points_path is not None else None
+        )
+
+        # ------------------------------------------------------------------
+        # Build link meshes
+        # ------------------------------------------------------------------
+        self.mesh = {}
+        areas = {}
+
+        def build_mesh_recurse(body):
+            if len(body.link.visuals) > 0:
+                link_name = body.link.name
+                link_vertices = []
+                link_faces = []
+                n_link_vertices = 0
+
+                for visual in body.link.visuals:
+                    # ✅ 防止虚拟节点崩溃的拦截
+                    if visual.geom_type is None:
+                        continue 
+
+                    geom_type = str(visual.geom_type).lower()
+                    geom_param = visual.geom_param
+
+                    scale = torch.tensor(
+                        [1.0, 1.0, 1.0],
+                        dtype=torch.float,
+                        device=device
+                    )
+
+                    if "mesh" in geom_type:
+                        mesh_name, mesh_scale = parse_visual_mesh_param(geom_param)
+                        mesh_file = resolve_mesh_file(mesh_path, mesh_name)
+
+                        link_mesh = tm.load_mesh(mesh_file, process=True)
+
+                        # 🔥 救命代码：强制修复 SolidWorks 导出的破损面片和反转法线！
+                        tm.repair.fix_normals(link_mesh)
+
+
+                        if mesh_scale is not None:
+                            scale = torch.tensor(
+                                mesh_scale,
+                                dtype=torch.float,
+                                device=device
+                            )
+
+                    elif "box" in geom_type:
+                        box_path = os.path.join(mesh_path, "box.obj")
+                        if os.path.exists(box_path):
+                            link_mesh = tm.load_mesh(box_path, process=False)
+                            link_mesh.vertices *= geom_param.detach().cpu().numpy()
+                        else:
+                            extents = 2 * geom_param.detach().cpu().numpy()
+                            link_mesh = tm.primitives.Box(extents=extents)
+
+                    elif "capsule" in geom_type:
+                        radius = float(geom_param[0])
+                        half_height = float(geom_param[1])
+                        link_mesh = tm.primitives.Capsule(
+                            radius=radius,
+                            height=half_height * 2.0
+                        ).apply_translation((0, 0, -half_height))
+
+                    else:
+                        raise NotImplementedError(
+                            f"Unsupported geom_type={visual.geom_type}, "
+                            f"str={geom_type}, geom_param={visual.geom_param}, "
+                            f"for link {link_name}"
+                        )
+
+                    if link_mesh.vertices.shape[0] == 0 or link_mesh.faces.shape[0] == 0:
+                        raise RuntimeError(
+                            f"Empty mesh loaded for link {link_name}, visual={visual}"
+                        )
+
+                    vertices = torch.tensor(
+                        link_mesh.vertices,
+                        dtype=torch.float,
+                        device=device
+                    )
+
+                    faces = torch.tensor(
+                        link_mesh.faces,
+                        dtype=torch.long,
+                        device=device
+                    )
+
+                    vertices = vertices * scale
+
+                    pos = visual.offset.to(self.device)
+                    vertices = pos.transform_points(vertices)
+
+                    link_vertices.append(vertices)
+                    link_faces.append(faces + n_link_vertices)
+                    n_link_vertices += len(vertices)
+
+
+                # ✅ 拼接所有部件的顶点和面
+                if len(link_vertices) > 0:
+                    link_vertices = torch.cat(link_vertices, dim=0)
+                    link_faces = torch.cat(link_faces, dim=0)
+
+                    # =========================================================
+                    # 💎 跨模型泛化核心：物理碰撞与视觉渲染分离 (生成完美闭合的碰撞凸包)
+                    # 无论输入的 STL 质量多差、法线多乱，凸包都能保证 SDF 计算 100% 准确
+                    # =========================================================
+                    # 1. 转换为 trimesh 对象
+                    combined_mesh = tm.Trimesh(
+                        vertices=link_vertices.detach().cpu().numpy(),
+                        faces=link_faces.detach().cpu().numpy(),
+                        process=False
+                    )
+                    
+                    # 2. 生成当前连杆的无敌凸包 (Convex Hull)
+                    hull_mesh = combined_mesh.convex_hull
+                    
+                    # 3. 将凸包数据转回 Tensor
+                    hull_verts = torch.tensor(hull_mesh.vertices, dtype=torch.float, device=device)
+                    hull_faces = torch.tensor(hull_mesh.faces, dtype=torch.long, device=device)
+                    
+                    # 4. 🔥 核心：SDF 碰撞算法使用 hull_verts (凸包)，彻底解决 E_pen 爆表！
+                    link_face_verts = index_vertices_by_faces(hull_verts, hull_faces)
+                    # =========================================================
+
+                    if contact_points is not None and link_name in contact_points:
+                        contact_candidates = torch.tensor(
+                            contact_points[link_name],
+                            dtype=torch.float32,
+                            device=device
+                        ).reshape(-1, 3)
+                    else:
+                        contact_candidates = torch.empty(0, 3, dtype=torch.float32, device=device)
+
+                    if penetration_points is not None and link_name in penetration_points:
+                        penetration_keypoints = torch.tensor(
+                            penetration_points[link_name],
+                            dtype=torch.float32,
+                            device=device
+                        ).reshape(-1, 3)
+                    else:
+                        penetration_keypoints = torch.empty(0, 3, dtype=torch.float32, device=device)
+
+                    # 存储到字典中：视觉继续用高清原模，碰撞(face_verts)用完美凸包
+                    self.mesh[link_name] = {
+                        'vertices': link_vertices,      # 保持原样：用于 get_plotly_data 高清可视化
+                        'faces': link_faces,            # 保持原样：用于高清可视化
+                        'face_verts': link_face_verts,  # 🔥 替换为凸包：专供 compute_sdf 和 cal_distance 使用！
+                        'contact_candidates': contact_candidates,
+                        'penetration_keypoints': penetration_keypoints,
+                    }
+
+                    areas[link_name] = tm.Trimesh(
+                        link_vertices.detach().cpu().numpy(),
+                        link_faces.detach().cpu().numpy()
+                    ).area.item()
+
+            for child in body.children:
+                build_mesh_recurse(child)
+
+        build_mesh_recurse(self.chain._root)
+
+        if len(self.mesh) == 0:
+            raise RuntimeError(f"No visual mesh was loaded from URDF: {model_path}")
+
+        # ------------------------------------------------------------------
+        # Joint names and limits (🔥 彻底修复：使用 URDF 解析器读取真实限位)
+        # ------------------------------------------------------------------
+        robot = URDF.from_xml_string(urdf_data)
+        limit_dict = {}
+        for j in robot.joints:
+            if j.type != "fixed":
+                if hasattr(j, 'limit') and j.limit is not None:
+                    # 获取下限和上限，防止 None 出现
+                    lower = j.limit.lower if j.limit.lower is not None else -np.pi
+                    upper = j.limit.upper if j.limit.upper is not None else np.pi
+                    limit_dict[j.name] = (lower, upper)
+                else:
+                    limit_dict[j.name] = (-np.pi, np.pi)
+
+        # 强制与 pytorch_kinematics 的底层顺序完全对齐！
+        pk_joint_names = self.chain.get_joint_parameter_names()
+        self.joints_names = pk_joint_names
+        
+        self.joints_lower = torch.tensor([limit_dict[name][0] for name in pk_joint_names], dtype=torch.float, device=device)
+        self.joints_upper = torch.tensor([limit_dict[name][1] for name in pk_joint_names], dtype=torch.float, device=device)
+
+        if len(self.joints_lower) == 0:
+            raise RuntimeError(f"No movable joints found in URDF: {model_path}")
+
+        self.n_dofs = len(self.joints_names)
+
+        # ------------------------------------------------------------------
+        # Surface points
+        # ------------------------------------------------------------------
+        total_area = sum(areas.values())
+
+        if n_surface_points > 0 and total_area <= 0:
+            raise RuntimeError("Total mesh area is zero; cannot sample surface points.")
+
+        if n_surface_points > 0:
+            num_samples = {
+                link_name: int(areas[link_name] / total_area * n_surface_points)
+                for link_name in self.mesh
+            }
+
+            first_link = list(num_samples.keys())[0]
+            num_samples[first_link] += n_surface_points - sum(num_samples.values())
+        else:
+            num_samples = {
+                link_name: 0
+                for link_name in self.mesh
+            }
+
+        for link_name in self.mesh:
+            if num_samples[link_name] == 0:
+                self.mesh[link_name]['surface_points'] = torch.tensor(
+                    [],
+                    dtype=torch.float,
+                    device=device
+                ).reshape(0, 3)
+                continue
+
+            mesh = pytorch3d.structures.Meshes(
+                self.mesh[link_name]['vertices'].unsqueeze(0),
+                self.mesh[link_name]['faces'].unsqueeze(0)
+            )
+
+            dense_point_cloud = pytorch3d.ops.sample_points_from_meshes(
+                mesh,
+                num_samples=100 * num_samples[link_name]
+            )
+
+            surface_points = pytorch3d.ops.sample_farthest_points(
+                dense_point_cloud,
+                K=num_samples[link_name]
+            )[0][0]
+
+            self.mesh[link_name]['surface_points'] = surface_points.to(
+                dtype=torch.float,
+                device=device
+            )
+
+        # ------------------------------------------------------------------
+        # Indexing
+        # ------------------------------------------------------------------
+        self.link_name_to_link_index = {
+            link_name: i
+            for i, link_name in enumerate(self.mesh)
+        }
+
+        contact_candidate_list = []
+        global_link_index_list = []
+
+        for i, link_name in enumerate(self.mesh):
+            pts = self.mesh[link_name]['contact_candidates']
+            if pts.shape[0] > 0:
+                contact_candidate_list.append(pts)
+                global_link_index_list += [i] * pts.shape[0]
+
+        if len(contact_candidate_list) == 0:
+            raise RuntimeError(
+                f"No contact candidates loaded. Check {contact_points_path}. "
+                "The JSON keys must match URDF link names."
+            )
+
+        self.contact_candidates = torch.cat(contact_candidate_list, dim=0)
+        self.global_index_to_link_index = torch.tensor(
+            global_link_index_list,
+            dtype=torch.long,
+            device=device
+        )
+        self.n_contact_candidates = self.contact_candidates.shape[0]
+
+        penetration_keypoint_list = []
+        global_penetration_link_index_list = []
+
+        for i, link_name in enumerate(self.mesh):
+            pts = self.mesh[link_name]['penetration_keypoints']
+            if pts.shape[0] > 0:
+                penetration_keypoint_list.append(pts)
+                global_penetration_link_index_list += [i] * pts.shape[0]
+
+        if len(penetration_keypoint_list) > 0:
+            self.penetration_keypoints = torch.cat(
+                penetration_keypoint_list,
+                dim=0
+            )
+
+            self.global_index_to_link_index_penetration = torch.tensor(
+                global_penetration_link_index_list,
+                dtype=torch.long,
+                device=device
+            )
+
+            self.n_keypoints = self.penetration_keypoints.shape[0]
+        else:
+            self.penetration_keypoints = None
+            self.global_index_to_link_index_penetration = None
+            self.n_keypoints = 0
+
+        # ------------------------------------------------------------------
+        # Runtime parameters
+        # ------------------------------------------------------------------
+        self.hand_pose = None
+        self.contact_point_indices = None
+        self.global_translation = None
+        self.global_rotation = None
+        self.current_status = None
+        self.contact_points = None
+
+    def set_parameters(self, hand_pose, contact_point_indices=None):
+        self.hand_pose = hand_pose
+
+        if self.hand_pose.requires_grad:
+            self.hand_pose.retain_grad()
+
+        self.global_translation = self.hand_pose[:, 0:3]
+        self.global_rotation = robust_compute_rotation_matrix_from_ortho6d(
+            self.hand_pose[:, 3:9]
+        )
+
+        self.current_status = self.chain.forward_kinematics(self.hand_pose[:, 9:])
+
+        if contact_point_indices is not None:
+            self.contact_point_indices = contact_point_indices
+            batch_size, n_contact = contact_point_indices.shape
+
+            self.contact_points = self.contact_candidates[self.contact_point_indices]
+            link_indices = self.global_index_to_link_index[self.contact_point_indices]
+
+            transforms = torch.zeros(
+                batch_size,
+                n_contact,
+                4,
+                4,
+                dtype=torch.float,
+                device=self.device
+            )
+
+            for link_name in self.mesh:
+                mask = link_indices == self.link_name_to_link_index[link_name]
+
+                if mask.any():
+                    cur = self.current_status[link_name].get_matrix().unsqueeze(1).expand(
+                        batch_size,
+                        n_contact,
+                        4,
+                        4
+                    )
+                    transforms[mask] = cur[mask]
+
+            self.contact_points = torch.cat([
+                self.contact_points,
+                torch.ones(
+                    batch_size,
+                    n_contact,
+                    1,
+                    dtype=torch.float,
+                    device=self.device
+                )
+            ], dim=2)
+
+            self.contact_points = (
+                transforms @ self.contact_points.unsqueeze(3)
+            )[:, :, :3, 0]
+
+            self.contact_points = (
+                self.contact_points @ self.global_rotation.transpose(1, 2)
+                + self.global_translation.unsqueeze(1)
+            )
+
+    def cal_distance(self, x):
+        """
+        Signed distance from object point cloud to LinkerHand L20 mesh surface.
+        Interior is positive, exterior is negative.
+        """
+
+        dis = []
+
+        x = (x - self.global_translation.unsqueeze(1)) @ self.global_rotation
+
+        for link_name in self.mesh:
+            matrix = self.current_status[link_name].get_matrix()
+
+            x_local = (
+                x - matrix[:, :3, 3].unsqueeze(1)
+            ) @ matrix[:, :3, :3]
+
+            x_local = x_local.reshape(-1, 3)
+
+            face_verts = self.mesh[link_name]['face_verts']
+            dis_local, dis_signs, _, _ = compute_sdf(x_local, face_verts)
+            dis_local = torch.sqrt(dis_local + 1e-8)
+            dis_local = dis_local * (-dis_signs)
+
+            dis.append(dis_local.reshape(x.shape[0], x.shape[1]))
+
+        if len(dis) == 0:
+            raise RuntimeError("No valid links were used in cal_distance().")
+
+        dis = torch.max(torch.stack(dis, dim=0), dim=0)[0]
+        return dis
+
+    def self_penetration(self):
+        if self.penetration_keypoints is None or self.n_keypoints == 0:
+            return torch.zeros(
+                self.global_translation.shape[0],
+                dtype=torch.float,
+                device=self.device
+            )
+
+        batch_size = self.global_translation.shape[0]
+
+        points = self.penetration_keypoints.clone().repeat(batch_size, 1, 1)
+        link_indices = self.global_index_to_link_index_penetration.clone().repeat(
+            batch_size,
+            1
+        )
+
+        transforms = torch.zeros(
+            batch_size,
+            self.n_keypoints,
+            4,
+            4,
+            dtype=torch.float,
+            device=self.device
+        )
+
+        for link_name in self.mesh:
+            mask = link_indices == self.link_name_to_link_index[link_name]
+
+            if mask.any():
+                cur = self.current_status[link_name].get_matrix().unsqueeze(1).expand(
+                    batch_size,
+                    self.n_keypoints,
+                    4,
+                    4
+                )
+                transforms[mask] = cur[mask]
+
+        points = torch.cat([
+            points,
+            torch.ones(
+                batch_size,
+                self.n_keypoints,
+                1,
+                dtype=torch.float,
+                device=self.device
+            )
+        ], dim=2)
+
+        points = (transforms @ points.unsqueeze(3))[:, :, :3, 0]
+
+        points = (
+            points @ self.global_rotation.transpose(1, 2)
+            + self.global_translation.unsqueeze(1)
+        )
+
+        dis = (
+            points.unsqueeze(1)
+            - points.unsqueeze(2)
+            + 1e-13
+        ).square().sum(3).sqrt()
+
+        dis = torch.where(
+            dis < 1e-6,
+            1e6 * torch.ones_like(dis),
+            dis
+        )
+
+        dis = 0.02 - dis
+
+        E_spen = torch.where(
+            dis > 0,
+            dis,
+            torch.zeros_like(dis)
+        )
+
+        return E_spen.sum((1, 2))
+
+    def get_surface_points(self):
+        points = []
+        batch_size = self.global_translation.shape[0]
+
+        for link_name in self.mesh:
+            n_surface_points = self.mesh[link_name]['surface_points'].shape[0]
+
+            point = self.current_status[link_name].transform_points(
+                self.mesh[link_name]['surface_points']
+            )
+
+            if 1 < batch_size != point.shape[0]:
+                point = point.expand(batch_size, n_surface_points, 3)
+
+            points.append(point)
+
+        points = torch.cat(points, dim=-2).to(self.device)
+
+        points = (
+            points @ self.global_rotation.transpose(1, 2)
+            + self.global_translation.unsqueeze(1)
+        )
+
+        return points
+
+    def get_contact_candidates(self):
+        points = []
+        batch_size = self.global_translation.shape[0]
+
+        for link_name in self.mesh:
+            pts = self.mesh[link_name]['contact_candidates']
+
+            if pts.shape[0] == 0:
+                continue
+
+            n_points = pts.shape[0]
+
+            point = self.current_status[link_name].transform_points(pts)
+
+            if 1 < batch_size != point.shape[0]:
+                point = point.expand(batch_size, n_points, 3)
+
+            points.append(point)
+
+        if len(points) == 0:
+            raise RuntimeError("No contact candidates loaded.")
+
+        points = torch.cat(points, dim=-2).to(self.device)
+
+        points = (
+            points @ self.global_rotation.transpose(1, 2)
+            + self.global_translation.unsqueeze(1)
+        )
+
+        return points
+
+    def get_penetraion_keypoints(self):
+        if self.penetration_keypoints is None:
+            raise RuntimeError("No penetration keypoints loaded.")
+
+        points = []
+        batch_size = self.global_translation.shape[0]
+
+        for link_name in self.mesh:
+            pts = self.mesh[link_name]['penetration_keypoints']
+
+            if pts.shape[0] == 0:
+                continue
+
+            n_points = pts.shape[0]
+
+            point = self.current_status[link_name].transform_points(pts)
+
+            if 1 < batch_size != point.shape[0]:
+                point = point.expand(batch_size, n_points, 3)
+
+            points.append(point)
+
+        if len(points) == 0:
+            raise RuntimeError("No penetration keypoints loaded.")
+
+        points = torch.cat(points, dim=-2).to(self.device)
+
+        points = (
+            points @ self.global_rotation.transpose(1, 2)
+            + self.global_translation.unsqueeze(1)
+        )
+
+        return points
+
+    def get_plotly_data(
+        self,
+        i,
+        opacity=0.5,
+        color='lightblue',
+        with_contact_points=False,
+        pose=None
+    ):
+        if pose is not None:
+            pose = np.array(pose, dtype=np.float32)
+
+        data = []
+
+        for link_name in self.mesh:
+            v = self.current_status[link_name].transform_points(
+                self.mesh[link_name]['vertices']
+            )
+
+            if len(v.shape) == 3:
+                v = v[i]
+
+            v = v @ self.global_rotation[i].T + self.global_translation[i]
+            v = v.detach().cpu()
+
+            f = self.mesh[link_name]['faces'].detach().cpu()
+
+            if pose is not None:
+                v = v @ pose[:3, :3].T + pose[:3, 3]
+
+            data.append(
+                go.Mesh3d(
+                    x=v[:, 0],
+                    y=v[:, 1],
+                    z=v[:, 2],
+                    i=f[:, 0],
+                    j=f[:, 1],
+                    k=f[:, 2],
+                    color=color,
+                    opacity=opacity,
+                    name=link_name
+                )
+            )
+
+        if with_contact_points:
+            if self.contact_points is None:
+                raise RuntimeError(
+                    "with_contact_points=True, but self.contact_points is None. "
+                    "Call set_parameters(..., contact_point_indices=...) first."
+                )
+
+            contact_points = self.contact_points[i].detach().cpu()
+
+            if pose is not None:
+                contact_points = contact_points @ pose[:3, :3].T + pose[:3, 3]
+
+            data.append(
+                go.Scatter3d(
+                    x=contact_points[:, 0],
+                    y=contact_points[:, 1],
+                    z=contact_points[:, 2],
+                    mode='markers',
+                    marker=dict(color='red', size=5),
+                    name='contact_points'
+                )
+            )
+
+        return data
