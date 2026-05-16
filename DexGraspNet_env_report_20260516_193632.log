@@ -1,0 +1,274 @@
+======== DexGraspNet Environment Report ========
+Generated: 2026年 05月 16日 星期六 19:36:32 CST
+
+----- Custom Environment Variables -----
+CC=gcc-10
+CXX=g++-10
+CUDAHOSTCXX=g++-10
+CUDA_HOME=/usr/local/cuda-11.3
+PATH=/usr/local/cuda-11.3/bin:/opt/conda/envs/DexGraspNet/bin:/opt/conda/condabin:/opt/vulkan/x86_64/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LD_LIBRARY_PATH=/usr/local/cuda-11.3/lib64:/opt/vulkan/x86_64/lib:/usr/lib/x86_64-linux-gnu:/usr/local/cuda/lib64
+
+----- System Info -----
+Linux gpufree-container 5.15.0-176-generic #186-Ubuntu SMP Fri Mar 13 11:01:42 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+PRETTY_NAME="Ubuntu 22.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="22.04"
+VERSION="22.04.5 LTS (Jammy Jellyfish)"
+VERSION_CODENAME=jammy
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=jammy
+
+----- GCC (gcc-10) Version -----
+gcc-10 (Ubuntu 10.5.0-1ubuntu1~22.04.3) 10.5.0
+
+----- CUDA Toolkit (nvcc from CUDA_HOME) -----
+nvcc: NVIDIA (R) Cuda compiler driver
+Copyright (c) 2005-2021 NVIDIA Corporation
+Built on Mon_May__3_19:15:13_PDT_2021
+Cuda compilation tools, release 11.3, V11.3.109
+Build cuda_11.3.r11.3/compiler.29920130_0
+
+----- NVIDIA Driver / GPU -----
+Sat May 16 19:36:32 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 580.126.09             Driver Version: 580.126.09     CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 4090        On  |   00000000:09:00.0  On |                  Off |
+| 30%   30C    P8             21W /  450W |      95MiB /  24564MiB |     18%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+
+----- Python & Conda -----
+Python 3.7.12
+/opt/conda/envs/DexGraspNet/bin/python
+
+     active environment : DexGraspNet
+    active env location : /opt/conda/envs/DexGraspNet
+            shell level : 2
+       user config file : /root/.condarc
+ populated config files : /opt/conda/.condarc
+                          /root/.condarc
+          conda version : 25.9.1
+    conda-build version : not installed
+         python version : 3.13.9.final.0
+                 solver : libmamba (default)
+       virtual packages : __archspec=1=sapphirerapids
+                          __conda=25.9.1=0
+                          __cuda=13.0=0
+                          __glibc=2.35=0
+                          __linux=5.15.0=0
+                          __unix=0=0
+       base environment : /opt/conda  (writable)
+      conda av data dir : /opt/conda/etc/conda
+  conda av metadata url : None
+           channel URLs : https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro/linux-64
+                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/pro/noarch
+                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/linux-64
+                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/noarch
+                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/linux-64
+                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/noarch
+                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/linux-64
+                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/noarch
+                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/linux-64
+                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/noarch
+                          https://repo.anaconda.com/pkgs/main/linux-64
+                          https://repo.anaconda.com/pkgs/main/noarch
+                          https://repo.anaconda.com/pkgs/r/linux-64
+                          https://repo.anaconda.com/pkgs/r/noarch
+          package cache : /opt/conda/pkgs
+                          /root/.conda/pkgs
+       envs directories : /opt/conda/envs
+                          /root/.conda/envs
+               platform : linux-64
+             user-agent : conda/25.9.1 requests/2.32.5 CPython/3.13.9 Linux/5.15.0-176-generic ubuntu/22.04.5 glibc/2.35 solver/libmamba conda-libmamba-solver/25.4.0 libmambapy/2.3.2 aau/0.7.4 c/. s/. e/.
+                UID:GID : 0:0
+             netrc file : None
+           offline mode : False
+
+
+----- All Packages (conda list) -----
+# packages in environment at /opt/conda/envs/DexGraspNet:
+#
+# Name                     Version             Build                        Channel
+_openmp_mutex              4.5                 20_gnu                       https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+absl-py                    2.1.0               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+aiohttp                    3.7.4.post0         py37h5e8e339_1               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+async-timeout              3.0.1               py_1000                      https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+attrs                      24.2.0              pyh71513ae_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+blas                       2.16                mkl                          conda-forge
+blinker                    1.6.3               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+brotli-python              1.0.9               py37hd23a5d3_7               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+bzip2                      1.0.8               hda65f42_9                   conda-forge
+c-ares                     1.34.6              hb03c661_0                   conda-forge
+ca-certificates            2026.4.22           hbd8a1cb_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+cachetools                 5.5.0               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+certifi                    2024.8.30           pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+cffi                       1.15.1              py37h43b0acd_1               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+chardet                    4.0.0               py37h89c1867_3               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+charset-normalizer         3.4.0               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+click                      8.1.3               py37h89c1867_0               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+cmake                      4.3.2               hc85cc9f_0                   conda-forge
+colorama                   0.4.6               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+cryptography               38.0.2              py37h5994e8b_1               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+cudatoolkit                11.3.1              hb98b00a_13                  conda-forge
+dataclasses                0.8                 pyhc8e2a94_3                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+defusedxml                 0.7.1               pyhd8ed1ab_0                 conda-forge
+ffmpeg                     4.4.0               hca11adc_2                   conda-forge
+freetype                   2.14.3              ha770c72_0                   conda-forge
+fvcore                     0.1.5.post20221221  pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+gmp                        6.3.0               hac33072_2                   conda-forge
+gnutls                     3.6.13              h85f3911_1                   conda-forge
+google-auth                2.23.0              pyh1a96a4e_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+google-auth-oauthlib       0.4.6               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+grpc-cpp                   1.48.1              h30feacc_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+grpcio                     1.48.1              py37hd557365_0               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+icu                        75.1                he02047a_0                   conda-forge
+idna                       3.10                pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+importlib-metadata         4.11.4              py37h89c1867_0               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+intel-openmp               2025.0.0            h06a4308_1171                https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+iopath                     0.1.10              pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+jpeg                       9e                  h0b41bf4_3                   conda-forge
+keyutils                   1.6.3               hb9d3cd8_0                   conda-forge
+krb5                       1.22.2              ha1258a1_0                   conda-forge
+lame                       3.100               h166bdaf_1003                conda-forge
+lcms2                      2.14                h6ed2654_0                   conda-forge
+ld_impl_linux-64           2.45.1              default_hbd61a6d_102         https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+lerc                       4.1.0               hdb68285_0                   conda-forge
+libabseil                  20220623.0          cxx17_h05df665_6             https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libblas                    3.8.0               16_mkl                       conda-forge
+libcblas                   3.8.0               16_mkl                       conda-forge
+libcurl                    8.19.0              hcf29cc6_0                   conda-forge
+libdeflate                 1.14                h166bdaf_0                   conda-forge
+libedit                    3.1.20250104        pl5321h7949ede_0             conda-forge
+libev                      4.33                hd590300_2                   conda-forge
+libexpat                   2.7.5               hecca717_0                   conda-forge
+libffi                     3.4.6               h2dba641_1                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libfreetype                2.14.3              ha770c72_0                   conda-forge
+libfreetype6               2.14.3              h73754d4_0                   conda-forge
+libgcc                     15.2.0              he0feb66_18                  https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libgcc-ng                  15.2.0              h69a702a_18                  https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libgfortran-ng             7.5.0               h14aa051_20                  conda-forge
+libgfortran4               7.5.0               h14aa051_20                  conda-forge
+libgfortran5               15.2.0              h68bc16d_18                  https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libgomp                    15.2.0              he0feb66_18                  https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libiconv                   1.18                h3b78370_2                   conda-forge
+liblapack                  3.8.0               16_mkl                       conda-forge
+liblapacke                 3.8.0               16_mkl                       conda-forge
+liblzma                    5.8.3               hb03c661_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+liblzma-devel              5.8.3               hb03c661_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libnghttp2                 1.68.1              h877daf1_0                   conda-forge
+libnsl                     2.0.1               hb9d3cd8_1                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libpng                     1.6.58              h421ea60_0                   conda-forge
+libprotobuf                3.21.8              h6239696_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libspatialindex            1.9.3               he02047a_5                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libsqlite                  3.53.0              h0c1763c_0                   conda-forge
+libssh2                    1.11.1              hcf80075_0                   conda-forge
+libstdcxx                  15.2.0              h934c35e_18                  https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libstdcxx-ng               15.2.0              hdf11a46_18                  https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+libtiff                    4.4.0               h82bc61c_5                   conda-forge
+libuv                      1.51.0              hb03c661_1                   conda-forge
+libvpx                     1.11.0              h9c3ff4c_3                   conda-forge
+libwebp-base               1.6.0               hd42ef1d_0                   conda-forge
+libxcb                     1.13                h7f98852_1004                conda-forge
+libxml2                    2.13.9              h04c0eec_0                   conda-forge
+libxslt                    1.1.43              h7a3aeb2_0                   conda-forge
+libzlib                    1.3.2               h25fd6f3_2                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+lxml                       4.9.1               py37h540881e_0               conda-forge
+markdown                   3.6                 pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+markupsafe                 2.1.1               py37h540881e_1               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+mkl                        2020.2              256                          https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+multidict                  6.0.2               py37h540881e_1               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+ncurses                    6.5                 h2d0b736_3                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+nettle                     3.6                 he412f7d_0                   conda-forge
+numpy                      1.21.6              py37h976b520_0               conda-forge
+oauthlib                   3.2.2               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+openh264                   2.1.1               h4ff587b_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+openjpeg                   2.5.0               h7d73246_1                   conda-forge
+openssl                    3.6.2               h35e630c_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+packaging                  23.2                pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+pillow                     9.2.0               py37h850a105_2               conda-forge
+pip                        24.0                pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+plotly                     5.24.1              pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+portalocker                2.6.0               py37h89c1867_0               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+protobuf                   4.21.8              py37hd23a5d3_0               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+pthread-stubs              0.4                 hb9d3cd8_1002                conda-forge
+pyasn1                     0.5.1               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+pyasn1-modules             0.3.0               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+pycparser                  2.21                pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+pyjwt                      2.8.0               pyhd8ed1ab_1                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+pyopenssl                  23.2.0              pyhd8ed1ab_1                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+pysocks                    1.7.1               py37h89c1867_5               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+python                     3.7.12              hf930737_100_cpython         https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+python_abi                 3.7                 4_cp37m                      conda-forge
+pytorch                    1.10.0              py3.7_cuda11.3_cudnn8.2.0_0  pytorch
+pytorch-mutex              1.0                 cuda                         pytorch
+pytorch3d                  0.6.2               py37_cu113_pyt1100           pytorch3d
+pyu2f                      0.1.5               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+pyyaml                     6.0                 py37h540881e_4               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+re2                        2022.06.01          h27087fc_1                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+readline                   8.3                 h853b02a_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+requests                   2.32.2              pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+requests-oauthlib          2.0.0               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+rhash                      1.4.6               hb9d3cd8_1                   conda-forge
+rsa                        4.9                 pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+rtree                      1.0.1               py37h0b55af0_0               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+scipy                      1.7.3               py37hf2a6cf1_0               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+setuptools                 59.5.0              pypi_0                       pypi
+six                        1.16.0              pyh6c4a22f_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+sqlite                     3.53.0              hbc0de68_0                   conda-forge
+tabulate                   0.9.0               pyhd8ed1ab_1                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+tenacity                   8.2.3               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+tensorboard                2.11.2              pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+tensorboard-data-server    0.6.1               py37h52d8a92_0               https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+tensorboard-plugin-wit     1.8.1               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+termcolor                  2.3.0               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+tk                         8.6.13              noxft_h366c992_103           https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+torchaudio                 0.10.0              py37_cu113                   pytorch
+torchsdf                   0.1.0               dev_0                        <develop>
+torchvision                0.11.0              py37_cu113                   pytorch
+tqdm                       4.67.1              pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+transformations            2021.6.6            pypi_0                       pypi
+transforms3d               0.4.2               pyhd8ed1ab_0                 conda-forge
+trimesh                    4.5.3               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+typing-extensions          4.7.1               hd8ed1ab_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+typing_extensions          4.7.1               pyha770c72_0                 conda-forge
+urdf-parser-py             0.0.4               pypi_0                       pypi
+urllib3                    1.26.19             pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+werkzeug                   2.2.3               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+wheel                      0.42.0              pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+x264                       1!161.3030          h7f98852_1                   conda-forge
+xorg-libxau                1.0.12              hb03c661_1                   conda-forge
+xorg-libxdmcp              1.1.5               hb03c661_1                   conda-forge
+xz                         5.8.3               ha02ee65_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+xz-gpl-tools               5.8.3               ha02ee65_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+xz-tools                   5.8.3               hb03c661_0                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+yacs                       0.1.8               pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+yaml                       0.2.5               h280c20c_3                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+yarl                       1.7.2               py37h540881e_2               https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+zipp                       3.15.0              pyhd8ed1ab_0                 https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+zstd                       1.5.7               hb78ec9c_6                   https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge
+
+----- PyTorch CUDA Check -----
+PyTorch: 1.10.0
+CUDA available: True
+CUDA version: 11.3
+
+----- TensorFlow CUDA Check -----
+
+----- Exporting conda env to environment.yml -----
+Conda environment exported to environment.yml
+======== Report saved to DexGraspNet_env_report_20260516_193632.log ========
+Conda env file also saved as environment.yml
