@@ -114,9 +114,9 @@ If you use this code or dataset in your research, please cite the original work:
   year={2022}
 }
 
-If you additionally use the modifications or extensions provided in this repository (e.g., LinkerHand L20 adaptation), please cite as:
 ```
 
+If you additionally use the modifications or extensions provided in this repository (e.g., LinkerHand L20 adaptation), please cite as:
 ```bibtex
 @misc{your2026dexgraspnetl20,
   author = {Li Juyang},
