@@ -138,7 +138,7 @@ aria-hidden="true">Pastedimage20260510120119.png</figcaption>
 
 ## 📚 Citation
 
-This project is built upon the [DexGraspNet](https://dexgraspnet.github.io/) framework.  
+This project is built upon the [DexGraspNet](https://github.com/PKU-EPIC/DexGraspNet) framework.  
 If you use this code or dataset in your research, please cite the original work:
 
 ```bibtex
