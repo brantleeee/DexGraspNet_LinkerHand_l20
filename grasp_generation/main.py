@@ -18,7 +18,7 @@ import transforms3d
 import json
 from pathlib import Path
 
-from utils.hand_model_v2 import HandModel
+from utils.hand_model import HandModel
 from utils.object_model import ObjectModel
 from utils.initializations import initialize_convex_hull
 from utils.energy import cal_energy
@@ -50,8 +50,6 @@ parser.add_argument('--hull-inflation', choices=['paper', 'scale-aware'], defaul
 parser.add_argument('--contact-library', type=str, help='Explicit versioned point/frame directory; default preserves old library')
 parser.add_argument('--w-normal', type=float, default=0., help='Additional hand/object antiparallel-normal loss; default disabled')
 parser.add_argument('--root-contact-policy',choices=['all','angle-only','all-roots-angle-only'],default='all')
-parser.add_argument('--penetration-geometry',choices=['legacy-convex','raw-mesh'],default='legacy-convex')
-parser.add_argument('--contact-sampling',choices=['global','grouped4','grouped5'],default='global')
 
 # hyper parameters (** Magic, don't touch! **)
 parser.add_argument('--switch_possibility', default=0.5, type=float)
@@ -79,7 +77,6 @@ parser.add_argument('--thres_dis', default=0.005, type=float)
 parser.add_argument('--thres_pen', default=0.001, type=float)
 
 args = parser.parse_args()
-if args.contact_sampling!='global':args.n_contact=4 if args.contact_sampling=='grouped4' else 5
 if not np.isfinite(args.w_normal) or args.w_normal<0:parser.error('Invalid normal weight')
 if args.w_normal and not args.contact_library:parser.error('--w-normal requires --contact-library')
 library_path=Path(args.contact_library).resolve() if args.contact_library else None
@@ -109,10 +106,8 @@ hand_model = HandModel(
     contact_points_path=str(library_path/'contact_points.json') if library_path else 'mjcf/contact_points.json',
     penetration_points_path='mjcf/penetration_points.json',
     device=device,
-    force_mesh_sdf=args.penetration_geometry=='raw-mesh',penetration_geometry=args.penetration_geometry
+    force_mesh_sdf=True
 )
-hand_model.contact_sampling=args.contact_sampling
-print('penetration geometry',args.penetration_geometry,'contact sampling',args.contact_sampling,'slots',args.n_contact,flush=True)
 contact_provenance=attach_library(hand_model,library_path) if library_path else None
 
 object_model = ObjectModel(
@@ -161,13 +156,9 @@ with open(os.path.join('../data/experiments', args.name, 'output.txt'), 'w') as 
 if library_path:
     run=Path('../data/experiments')/args.name
     shutil.copytree(library_path,run/'contact_library')
-    (run/'penetration_geometry.json').write_text(json.dumps(hand_model.geometry_audit,indent=2)+'\n')
-    np.save(run/'object_surface_points.npy',object_model.surface_points_tensor.detach().cpu().numpy())
     contact_provenance.update(w_normal=args.w_normal,seed=args.seed,n_contact=args.n_contact,root_contact_policy=args.root_contact_policy,
-        penetration_geometry=args.penetration_geometry,contact_sampling=args.contact_sampling,algorithm_version='l20-generation-v2',
-        contact_selection=('global random slots, legacy behavior' if args.contact_sampling=='global' else args.contact_sampling+': disjoint finger pools, unique IDs, preserved at initialization and every proposal'),
         disabled_repulsion_link_pairs=[sorted(x) for x in sorted(ignored_pairs(args.root_contact_policy),key=lambda x:sorted(x))],
-        code_sha256={str(p.resolve()):__import__('hashlib').sha256(p.read_bytes()).hexdigest() for p in [Path(__file__),Path('utils/contact_library.py'),Path('utils/energy.py'),Path('utils/optimizer.py'),Path('utils/root_repulsion.py'),Path('utils/hand_model_v2.py'),Path('utils/contact_sampling.py'),Path('../scripts/l20_root_collision_policy.py')]})
+        code_sha256={str(p.resolve()):__import__('hashlib').sha256(p.read_bytes()).hexdigest() for p in [Path(__file__),Path('utils/contact_library.py'),Path('utils/energy.py'),Path('utils/optimizer.py'),Path('utils/root_repulsion.py'),Path('../scripts/l20_root_collision_policy.py')]})
     (run/'generation_contact_model.json').write_text(json.dumps(contact_provenance,indent=2)+'\n')
 
 
@@ -273,7 +264,6 @@ for i in range(len(args.object_code_list)):
             E_spen=E_spen[idx].item(),
             E_joints=E_joints[idx].item(),
             root_contact_policy=args.root_contact_policy,
-            penetration_geometry=args.penetration_geometry,contact_sampling=args.contact_sampling,
             **(dict(E_normal=E_normal[idx].item(),normal_weight=args.w_normal,
                 contact_library_manifest_sha256=contact_provenance['manifest_sha256'],
                 contact_point_indices=hand_model.contact_point_indices[idx].detach().cpu().tolist(),

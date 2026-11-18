@@ -9,7 +9,9 @@ def rank_candidates(data,k):
     if k<1 or k>len(data):raise ValueError('top-k must be between 1 and number of candidates')
     values=np.array([float(g['energy']) for g in data])
     if not np.isfinite(values).all():raise ValueError('Nonfinite grasp energy')
-    return np.argsort(values,kind='stable')[:k].tolist()
+    order=np.argsort(values,kind='stable').tolist()
+    if any('geometry_admitted' in g for g in data):order=[i for i in order if data[i].get('geometry_admitted') is True]
+    return order[:k]
 
 
 def main():
@@ -43,7 +45,7 @@ def main():
         pose=translation+rot[:,:2].T.ravel().tolist()+[q[n] for n in hand.joints_names]
         hand.set_parameters(torch.tensor([pose],dtype=torch.float,device='cpu'))
         obj.object_scale_tensor=torch.tensor([[g['scale']]],dtype=torch.float)
-        passed=bool(g['E_fc']<.3 and g['E_dis']<.005 and g['E_pen']<.001)
+        passed=bool(g['geometry_admitted']) if 'geometry_admitted' in g else bool(g['E_fc']<.3 and g['E_dis']<.005 and g['E_pen']<.001)
         fig=go.Figure(hand.get_plotly_data(i=0,opacity=1,color='lightblue',with_contact_points=False)+obj.get_plotly_data(i=0,color='orange',opacity=1))
         fig.update_layout(scene_aspectmode='data',title=f'{a.object_code} | rank {rank} | candidate {idx} | energy {g["energy"]:.6g} | scale {g["scale"]:.6g} | geometry {"PASS" if passed else "FAIL"}')
         eye=np.asarray(translation,float)

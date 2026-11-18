@@ -64,7 +64,7 @@ def main():
         name=f'rank_{rank:02d}_candidate_{idx:03d}.html';(a.output/name).write_text(page)
         rows.append(dict(rank=rank,candidate_index=idx,energy=float(g['energy']),E_normal=float(g['E_normal']),stable_contact_ids=g['contact_stable_ids'],html=name))
     (a.output/'ranking.json').write_text(json.dumps(dict(source=str(a.result_file.resolve()),source_sha256=hashlib.sha256(a.result_file.read_bytes()).hexdigest(),contact_provenance=provenance,display_only_cell_m=.0006,rows=rows),indent=2)+'\n')
-    (a.output/'index.html').write_text('<!doctype html><meta charset="utf-8"><h1>L20 v6 电钻静态生成 · 前'+str(a.top_k)+' · 无WebGL</h1><p>按含法向项的总能量排名；不是动力学成功排名。显示聚类不用于优化。</p><ol>'+''.join(f'<li><a href="{x["html"]}">候选{x["candidate_index"]}，能量{x["energy"]:.6g}</a></li>' for x in rows)+'</ol>')
+    (a.output/'index.html').write_text('<!doctype html><meta charset="utf-8"><h1>L20 v6 电钻静态生成 · 前'+str(len(rows))+' · 无WebGL</h1><p>若含geometry_admitted，仅导出通过几何准入的候选；0个表示无合格抓取。不是动力学成功排名。显示聚类不用于优化。</p><ol>'+''.join(f'<li><a href="{x["html"]}">候选{x["candidate_index"]}，能量{x["energy"]:.6g}</a></li>' for x in rows)+'</ol>')
     print(a.output/'index.html',flush=True)
 
 

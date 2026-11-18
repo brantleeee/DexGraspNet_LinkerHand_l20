@@ -76,9 +76,8 @@ class Annealing:
         hand_pose = self.hand_model.joint_constraints.project(hand_pose).detach().requires_grad_(True)
         batch_size, n_contact = self.hand_model.contact_point_indices.shape
         switch_mask = torch.rand(batch_size, n_contact, dtype=torch.float, device=self.device) < self.switch_possibility
-        from .contact_sampling import sample_contacts
-        contact_point_indices = sample_contacts(self.hand_model,batch_size,n_contact,
-            previous=self.hand_model.contact_point_indices,switch_mask=switch_mask)
+        contact_point_indices = self.hand_model.contact_point_indices.clone()
+        contact_point_indices[switch_mask] = torch.randint(self.hand_model.n_contact_candidates, size=[switch_mask.sum()], device=self.device)
 
         self.old_hand_pose = self.hand_model.hand_pose
         self.old_contact_point_indices = self.hand_model.contact_point_indices

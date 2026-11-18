@@ -19,6 +19,7 @@ external/
 data/isaacsim_l20/
 data/mjlab_grasp/
 data/reports/
+data/code_backups/
 MUJOCO_LOG.TXT
 *.bak_before_*
 *.bak_torch27

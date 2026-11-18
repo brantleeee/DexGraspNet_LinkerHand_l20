@@ -377,4 +377,6 @@ bash scripts/tensorboard.sh
 }
 ```
 
-最新生成修正：[v2原始非凸网格查询、五指分组接触及6000步命令](docs/L20_GENERATION_V2.md)。
+当前生成流程已按用户确认恢复为[五指分槽之前的4全局槽＋原凸包穿透模型](docs/L20_RESTORED_GLOBAL4.md)。[五指分组](docs/L20_GROUPED_CONTACT_SAMPLING.md)、[接近目标](docs/L20_SELECTED_CONTACT_PROXIMITY.md)与历史[v2原始非凸方案](docs/L20_GENERATION_V2.md)均已撤回；实验数据保留。
+
+**2026-11-18：暂停使用v2长生成建议。** [严重穿透失败证据、原因与下一版验收条件](docs/L20_V2_PENETRATION_FAILURE_20261118.md)。

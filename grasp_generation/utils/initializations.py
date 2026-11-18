@@ -162,6 +162,5 @@ def initialize_convex_hull(hand_model, object_model, args):
     hand_pose.requires_grad_()
     # =========================================================================
 
-    from .contact_sampling import sample_contacts
-    contact_point_indices = sample_contacts(hand_model,total_batch_size,args.n_contact)
+    contact_point_indices = torch.randint(hand_model.n_contact_candidates, size=[total_batch_size, args.n_contact], device=device)
     hand_model.set_parameters(hand_pose, contact_point_indices)

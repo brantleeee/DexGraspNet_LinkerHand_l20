@@ -22,8 +22,6 @@ def main():
     parser.add_argument('--hull-inflation', choices=['paper', 'scale-aware'], default='scale-aware')
     parser.add_argument('--name', default='l20_small_'+datetime.now().strftime('%Y%m%dT%H%M%S'))
     parser.add_argument('--contact-library',type=Path)
-    parser.add_argument('--penetration-geometry',choices=['legacy-convex','raw-mesh'],default='legacy-convex')
-    parser.add_argument('--contact-sampling',choices=['global','grouped4','grouped5'],default='global')
     parser.add_argument('--root-contact-policy',choices=['all','angle-only','all-roots-angle-only'],default='all')
     parser.add_argument('--w-normal',type=float,default=0.)
     args = parser.parse_args()
@@ -46,7 +44,7 @@ def main():
     subprocess.run([sys.executable, str(root/'grasp_generation/main.py'), '--name', args.name,
                     '--object_code_list', args.object_code, '--object-scales', *map(str,args.scales),
                     '--batch_size', str(len(args.scales)*args.batch_size_per_scale),
-                    '--n_iter', str(args.n_iter), '--hull-inflation', args.hull_inflation,'--root-contact-policy',args.root_contact_policy,'--penetration-geometry',args.penetration_geometry,'--contact-sampling',args.contact_sampling,*extra], cwd=root, env=environment, check=True)
+                    '--n_iter', str(args.n_iter), '--hull-inflation', args.hull_inflation,'--root-contact-policy',args.root_contact_policy,*extra], cwd=root, env=environment, check=True)
     from validate_grasp_dynamics import project_pose
     robot = ET.parse(root/'grasp_generation/mjcf/linkerhand_l20_right.urdf').getroot()
     manifest = json.loads((output/'results'/f'{args.object_code}_scales.json').read_text())
