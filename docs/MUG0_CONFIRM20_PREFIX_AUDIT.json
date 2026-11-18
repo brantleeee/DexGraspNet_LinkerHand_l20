@@ -1,0 +1,66 @@
+{
+  "source": "data/experiments/mug0_v5_half_confirm20_20261106_135255",
+  "scope": "four zero_only cases; offline recorded trajectory audit; 0.1mm is an analysis threshold, not acceptance",
+  "conclusion": "Identical explicit t0 state and prefix targets, but dynamic prefix diverges before policy intervention. Cause not established.",
+  "trials": [
+    {
+      "group": 11,
+      "case": "gy+",
+      "prefix_end_seconds": 2.5,
+      "initial_position_difference_m": 0.0,
+      "initial_joint_difference_rad": 0.0,
+      "prefix_target_difference_max_rad": 0.0,
+      "prefix_end_position_difference_mm": 1.7943009133935839,
+      "prefix_end_joint_difference_max_rad": 0.03817591071128845,
+      "zero_force_at_prefix_end_n": 4.025936126708984,
+      "policy_force_at_prefix_end_n": 0.0,
+      "first_position_difference_above_0p1mm_seconds": 0.004166666666666667
+    },
+    {
+      "group": 13,
+      "case": "gz-",
+      "prefix_end_seconds": 2.5,
+      "initial_position_difference_m": 0.0,
+      "initial_joint_difference_rad": 0.0,
+      "prefix_target_difference_max_rad": 0.0,
+      "prefix_end_position_difference_mm": 6.922159841476814,
+      "prefix_end_joint_difference_max_rad": 0.01995110511779785,
+      "zero_force_at_prefix_end_n": 5.476557731628418,
+      "policy_force_at_prefix_end_n": 0.0,
+      "first_position_difference_above_0p1mm_seconds": 0.004166666666666667
+    },
+    {
+      "group": 16,
+      "case": "gx-",
+      "prefix_end_seconds": 2.5,
+      "initial_position_difference_m": 0.0,
+      "initial_joint_difference_rad": 0.0,
+      "prefix_target_difference_max_rad": 0.0,
+      "prefix_end_position_difference_mm": 3.5685130261413818,
+      "prefix_end_joint_difference_max_rad": 0.012745201587677002,
+      "zero_force_at_prefix_end_n": 2.1399736404418945,
+      "policy_force_at_prefix_end_n": 0.0,
+      "first_position_difference_above_0p1mm_seconds": 0.004166666666666667
+    },
+    {
+      "group": 18,
+      "case": "gz-",
+      "prefix_end_seconds": 2.5,
+      "initial_position_difference_m": 0.0,
+      "initial_joint_difference_rad": 0.0,
+      "prefix_target_difference_max_rad": 0.0,
+      "prefix_end_position_difference_mm": 24.23178525404928,
+      "prefix_end_joint_difference_max_rad": 0.014814198017120361,
+      "zero_force_at_prefix_end_n": 2.126995086669922,
+      "policy_force_at_prefix_end_n": 0.0,
+      "first_position_difference_above_0p1mm_seconds": 0.058333333333333334
+    }
+  ],
+  "all_trials_prefix_summary": {
+    "trials": 120,
+    "position_difference_above_0p1mm_at_2p5s": 16,
+    "max_position_difference_mm_at_2p5s": 25.112494794703448,
+    "max_prefix_target_difference_rad": 0.0,
+    "note": "0.1mm is an offline diagnostic threshold, not a new acceptance criterion"
+  }
+}

@@ -28,6 +28,7 @@ from utils.initializations import initialize_convex_hull
 from utils.energy import cal_energy
 from utils.optimizer import Annealing
 from utils.rot6d import robust_compute_rotation_matrix_from_ortho6d
+from utils.grasp_results import save_scale_groups
 
 from torch.multiprocessing import set_start_method
 
@@ -69,11 +70,11 @@ def generate(args_list):
         num_samples=2000, 
         device=device
     )
-    object_model.initialize(object_code_list)
+    object_model.initialize(object_code_list, scales=args.object_scales)
 
     initialize_convex_hull(hand_model, object_model, args)
     
-    hand_pose_st = hand_model.hand_pose.detach()
+    hand_pose_st = hand_model.hand_pose.detach().clone()
 
     optim_config = {
         'switch_possibility': args.switch_possibility,
@@ -160,6 +161,7 @@ def generate(args_list):
             # 💡 精简输出，直接对齐 main.py
             data_list.append(dict(
                 scale=scale,
+                source_index=j,
                 qpos=qpos,
                 qpos_st=qpos_st,
                 energy=energy[idx].item(),
@@ -170,6 +172,9 @@ def generate(args_list):
                 E_joints=E_joints[idx].item(),
             ))
         np.save(os.path.join(args.result_path, object_code + '.npy'), data_list, allow_pickle=True)
+        save_scale_groups(args.result_path, object_code, data_list,
+                          object_model.object_mesh_list[i].vertices,
+                          os.path.join(args.data_root_path, object_code, 'coacd/decomposed.obj'))
 
 
 if __name__ == '__main__':
@@ -182,6 +187,8 @@ if __name__ == '__main__':
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--todo', action='store_true')
     parser.add_argument('--seed', default=1, type=int)
+    parser.add_argument('--object-scales', '--object_scales', nargs='+', type=float,
+                        help='Explicit mesh scales, balanced across each object batch')
     
     # 💡 100% 对齐 main.py
     parser.add_argument('--n_contact', default=4, type=int)

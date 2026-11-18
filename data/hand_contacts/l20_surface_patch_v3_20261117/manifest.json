@@ -1,0 +1,56 @@
+{
+  "version": "l20-surface-patch-anchors-v3-20261117",
+  "source_reference": "/home/lee/DexGraspNet_LinkerHand_l20/data/reports/l20_every_contact_frame_no_webgl_20261117/all_contact_frames.json",
+  "source_reference_sha256": "f1218bac5a2e4aae96f9c5e6de835d7760bc29ce4b24125b84a60bc9d5c46aed",
+  "removed_stable_ids": [
+    54,
+    55,
+    73,
+    76
+  ],
+  "manual_rules": {
+    "33": "Xc",
+    "50": "-Xc",
+    "65": "-Xc",
+    "74": "-Xc",
+    "79": "-Xc",
+    "67": "Yc"
+  },
+  "point_count": 416,
+  "anchor_radius_mm": 8.0,
+  "asset_sha256": {
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/linkerhand_l20_right.urdf": "c74af5c7d09ae140707c3849560e967c3e7234585dada60172047a9f46447472",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/contact_points.json": "ea0c34a50ed7bf174525cf443a6c1a15913bdab4a93070ff4f6e215072058715",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/base_link.STL": "bcb87038aee7e2b1ce4c9058eda853cab7447a48f6daf199eece02bfd6f2f5b5",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/pinky_metacarpals.STL": "2fe05498b5a8201219be33d94b0a4fdbdd41bd9190f0c3f9fc72ccfc73d7fb64",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/pinky_proximal.STL": "735e59053b8459d028ea695a02f842b567302e23ef32a934e6e6b69446fb6372",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/pinky_middle.STL": "0daf7b29e316118765b675976de01c48e781be9b515e0a41adcb4b856432f757",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/pinky_distal.STL": "8e5360b5120a73f131a0cccd65814138f56f323a4344b4f4c88bf29d082c8214",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/ring_metacarpals.STL": "4503b1302b1adce2eda9f60de1727a7e481aff0a50bfdd24dd1756b904ca1224",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/ring_proximal.STL": "93cc3baf41e18ae5705844a5458a6c6709eb359f947414d9611709680686c96a",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/ring_middle.STL": "1d009c89043ccf3d94064d51cfa1fb04d7daa960a6a37e381866ca73961d3fe0",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/ring_distal.STL": "e465ad35e35f23555f6a9e2f7cdfd0af322e878b29db4ede5ecd800c334e6c52",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/middle_metacarpals.STL": "172f41269341fb6cadd47bec8dc4cc9cc38df8bc17cb24f107dfc1517c6aeceb",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/middle_proximal.STL": "1ba251692df1187eef864b28d00cdb3513d5b931fef231ce386cf2e100b63940",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/middle_middle.STL": "cf17f473febce710a6d570a0f1afe2f1ba46c26bf103bacfd2915646427e46e1",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/middle_distal.STL": "cdf519b1a6c38610f47f4cc8bce4dafa5b68b3f90e83f0f87456f38a1611ed0d",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/index_metacarpals.STL": "c1266bde683bf0bb04f5c25b2411a63dc680e25bac6c5d31635aef93f1329a84",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/index_proximal.STL": "d69b2edf389bcf55364d163692d4ddced3098b1e50822a585612b2f112f60562",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/index_middle.STL": "cadab94ae419b76a563526a1b69db78ea780b01d56b8122fd7d04419fcf7201a",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/index_distal.STL": "7d2f75f7b99d8ce0f3e75f92ffe0986b161c214af6608e392a43459c5331a0b0",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_metacarpals_base1.STL": "0a0631972979aeade00c1cc607b9acfdc9deb2f2611e2f0faceb1d9c08d256de",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_metacarpals_base2.STL": "0dacf81bae8eb994266d736fa54e0b7d9d16ea1209ec0194fc5aae39c3aa8c69",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_metacarpals.STL": "ef6696980669c5c5e3899917ba1837a07399301b1497464bec36b5713980e946",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_proximal.STL": "ce43b3d2133f3519a1e8db4ccda2a3dd4fb72302ae181ff04f53744e8397f3bb",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_distal.STL": "20331a2b2ec816f8bde3fcb20e14f9ec308cd7f3ec655659354c489ee9242e45",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/utils/hand_model.py": "ceab33cc42f1943480aa5dab3c30ebdb81847089b17e52de0b1f32e4184b4f4a"
+  },
+  "generated_sha256": {
+    "contact_points.json": "9ef339f277d37d1b85de310b71a4381bfc49f3707d274f00931143219117d124",
+    "contact_frames.json": "b2e0cf118778c13cee59dce45eb1dc0ff6713bbcaaaa4fa76f2905b7c76a2f2f",
+    "id_mapping.json": "18293d879947994e05241d562fd8b0717427ec989c1a1152d4d002ae0091d6ff"
+  },
+  "patch_radius_mm": 2.0,
+  "implementation_sha256": "9d9c47dac0da48d9d9e011e3ad94479ce6249d3c7dec40aaa22ffc3a652adf8b",
+  "note": "New library, not activated in old generator. Stable labels differ from new dense runtime IDs. Automatic normals require review; not dynamics or region certification."
+}

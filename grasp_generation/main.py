@@ -15,14 +15,19 @@ import torch
 from tqdm import tqdm
 import math
 import transforms3d
+import json
+from pathlib import Path
 
-from utils.hand_model import HandModel
+from utils.hand_model_v2 import HandModel
 from utils.object_model import ObjectModel
 from utils.initializations import initialize_convex_hull
 from utils.energy import cal_energy
 from utils.optimizer import Annealing
 from utils.logger import Logger
 from utils.rot6d import robust_compute_rotation_matrix_from_ortho6d
+from utils.grasp_results import save_scale_groups
+from utils.contact_library import load_library,attach_library,world_contact_normals,normal_alignment
+from utils.root_repulsion import filtered_self_repulsion,ignored_pairs
 
 
 # prepare arguments
@@ -38,6 +43,15 @@ parser.add_argument('--name', default='l20_exp', type=str)
 parser.add_argument('--n_contact', default=4 , type=int)
 parser.add_argument('--batch_size', default=128, type=int)
 parser.add_argument('--n_iter', default=6000, type=int)
+parser.add_argument('--object-scales', '--object_scales', nargs='+', type=float,
+                    help='Explicit uniform mesh scales, balanced across each object batch')
+parser.add_argument('--hull-inflation', choices=['paper', 'scale-aware'], default='paper',
+                    help='Initialization hull offset: paper=0.2 m; scale-aware=small-object L20 experiment')
+parser.add_argument('--contact-library', type=str, help='Explicit versioned point/frame directory; default preserves old library')
+parser.add_argument('--w-normal', type=float, default=0., help='Additional hand/object antiparallel-normal loss; default disabled')
+parser.add_argument('--root-contact-policy',choices=['all','angle-only','all-roots-angle-only'],default='all')
+parser.add_argument('--penetration-geometry',choices=['legacy-convex','raw-mesh'],default='legacy-convex')
+parser.add_argument('--contact-sampling',choices=['global','grouped4','grouped5'],default='global')
 
 # hyper parameters (** Magic, don't touch! **)
 parser.add_argument('--switch_possibility', default=0.5, type=float)
@@ -65,6 +79,13 @@ parser.add_argument('--thres_dis', default=0.005, type=float)
 parser.add_argument('--thres_pen', default=0.001, type=float)
 
 args = parser.parse_args()
+if args.contact_sampling!='global':args.n_contact=4 if args.contact_sampling=='grouped4' else 5
+if not np.isfinite(args.w_normal) or args.w_normal<0:parser.error('Invalid normal weight')
+if args.w_normal and not args.contact_library:parser.error('--w-normal requires --contact-library')
+library_path=Path(args.contact_library).resolve() if args.contact_library else None
+if library_path:
+    load_library(library_path)
+    if (Path('../data/experiments')/args.name).exists():parser.error('New-library experiment output must be new')
 
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
@@ -85,11 +106,14 @@ print('running on', device)
 hand_model = HandModel(
     model_path='mjcf/linkerhand_l20_right.urdf', 
     mesh_path='mjcf/meshes',
-    contact_points_path='mjcf/contact_points.json',
+    contact_points_path=str(library_path/'contact_points.json') if library_path else 'mjcf/contact_points.json',
     penetration_points_path='mjcf/penetration_points.json',
     device=device,
-    force_mesh_sdf=True  
+    force_mesh_sdf=args.penetration_geometry=='raw-mesh',penetration_geometry=args.penetration_geometry
 )
+hand_model.contact_sampling=args.contact_sampling
+print('penetration geometry',args.penetration_geometry,'contact sampling',args.contact_sampling,'slots',args.n_contact,flush=True)
+contact_provenance=attach_library(hand_model,library_path) if library_path else None
 
 object_model = ObjectModel(
     data_root_path='../data/meshdata',
@@ -97,13 +121,14 @@ object_model = ObjectModel(
     num_samples=2000, 
     device=device
 )
-object_model.initialize(args.object_code_list)
+object_model.initialize(args.object_code_list, scales=args.object_scales)
 
 initialize_convex_hull(hand_model, object_model, args)
 
 print('n_contact_candidates', hand_model.n_contact_candidates)
 print('total batch size', total_batch_size)
-hand_pose_st = hand_model.hand_pose.detach()
+hand_pose_st = hand_model.hand_pose.detach().clone()
+print('independent optimization joints', len(hand_model.joint_constraints.independent_names))
 
 optim_config = {
     'switch_possibility': args.switch_possibility,
@@ -133,6 +158,17 @@ logger = Logger(log_dir=os.path.join('../data/experiments', args.name, 'logs'), 
 # log settings
 with open(os.path.join('../data/experiments', args.name, 'output.txt'), 'w') as f:
     f.write(str(args) + '\n')
+if library_path:
+    run=Path('../data/experiments')/args.name
+    shutil.copytree(library_path,run/'contact_library')
+    (run/'penetration_geometry.json').write_text(json.dumps(hand_model.geometry_audit,indent=2)+'\n')
+    np.save(run/'object_surface_points.npy',object_model.surface_points_tensor.detach().cpu().numpy())
+    contact_provenance.update(w_normal=args.w_normal,seed=args.seed,n_contact=args.n_contact,root_contact_policy=args.root_contact_policy,
+        penetration_geometry=args.penetration_geometry,contact_sampling=args.contact_sampling,algorithm_version='l20-generation-v2',
+        contact_selection=('global random slots, legacy behavior' if args.contact_sampling=='global' else args.contact_sampling+': disjoint finger pools, unique IDs, preserved at initialization and every proposal'),
+        disabled_repulsion_link_pairs=[sorted(x) for x in sorted(ignored_pairs(args.root_contact_policy),key=lambda x:sorted(x))],
+        code_sha256={str(p.resolve()):__import__('hashlib').sha256(p.read_bytes()).hexdigest() for p in [Path(__file__),Path('utils/contact_library.py'),Path('utils/energy.py'),Path('utils/optimizer.py'),Path('utils/root_repulsion.py'),Path('utils/hand_model_v2.py'),Path('utils/contact_sampling.py'),Path('../scripts/l20_root_collision_policy.py')]})
+    (run/'generation_contact_model.json').write_text(json.dumps(contact_provenance,indent=2)+'\n')
 
 
 # optimize
@@ -142,16 +178,29 @@ weight_dict = dict(
     w_spen=args.w_spen,
     w_joints=args.w_joints,
 )
-energy, E_fc, E_dis, E_pen, E_spen, E_joints = cal_energy(hand_model, object_model, verbose=True, **weight_dict)
+def evaluate():
+    terms=list(cal_energy(hand_model, object_model, verbose=True, **weight_dict))
+    if args.root_contact_policy!='all':
+        terms[4]=filtered_self_repulsion(hand_model,args.root_contact_policy)
+        terms[0]=terms[1]+args.w_dis*terms[2]+args.w_pen*terms[3]+args.w_spen*terms[4]+args.w_joints*terms[5]
+    alignment=torch.zeros_like(terms[0])
+    if library_path:
+        _,object_n=object_model.cal_distance(hand_model.contact_points)
+        alignment=normal_alignment(world_contact_normals(hand_model),object_n)
+        terms[0]=terms[0]+args.w_normal*alignment
+    return terms,alignment
+
+(energy, E_fc, E_dis, E_pen, E_spen, E_joints),E_normal = evaluate()
 
 energy.sum().backward(retain_graph=True)
 logger.log(energy, E_fc, E_dis, E_pen, E_spen, E_joints, 0, show=False)
+if library_path:logger.writer.add_scalar('Energy/normal',E_normal.mean(),0)
 
 for step in tqdm(range(1, args.n_iter + 1), desc='optimizing'):
     s = optimizer.try_step()
 
     optimizer.zero_grad()
-    new_energy, new_E_fc, new_E_dis, new_E_pen, new_E_spen, new_E_joints = cal_energy(hand_model, object_model, verbose=True, **weight_dict)
+    (new_energy, new_E_fc, new_E_dis, new_E_pen, new_E_spen, new_E_joints),new_E_normal = evaluate()
 
     new_energy.sum().backward(retain_graph=True)
 
@@ -164,8 +213,10 @@ for step in tqdm(range(1, args.n_iter + 1), desc='optimizing'):
         E_pen[accept] = new_E_pen[accept]
         E_spen[accept] = new_E_spen[accept]
         E_joints[accept] = new_E_joints[accept]
+        E_normal[accept] = new_E_normal[accept]
 
         logger.log(energy, E_fc, E_dis, E_pen, E_spen, E_joints, step, show=False)
+        if library_path:logger.writer.add_scalar('Energy/normal',E_normal.mean(),step)
 
 
 # save results
@@ -212,6 +263,7 @@ for i in range(len(args.object_code_list)):
         
         data_list.append(dict(
             scale=scale,
+            source_index=j,
             qpos=qpos,
             qpos_st=qpos_st,
             energy=energy[idx].item(),
@@ -220,7 +272,17 @@ for i in range(len(args.object_code_list)):
             E_pen=E_pen[idx].item(),
             E_spen=E_spen[idx].item(),
             E_joints=E_joints[idx].item(),
+            root_contact_policy=args.root_contact_policy,
+            penetration_geometry=args.penetration_geometry,contact_sampling=args.contact_sampling,
+            **(dict(E_normal=E_normal[idx].item(),normal_weight=args.w_normal,
+                contact_library_manifest_sha256=contact_provenance['manifest_sha256'],
+                contact_point_indices=hand_model.contact_point_indices[idx].detach().cpu().tolist(),
+                contact_stable_ids=hand_model.library_stable_ids[hand_model.contact_point_indices[idx]].detach().cpu().tolist(),
+                contact_normals_world=world_contact_normals(hand_model)[idx].detach().cpu().tolist()) if library_path else {}),
         ))
     np.save(os.path.join(result_path, args.object_code_list[i] + '.npy'), data_list, allow_pickle=True)
+    save_scale_groups(result_path, args.object_code_list[i], data_list,
+                      object_model.object_mesh_list[i].vertices,
+                      os.path.join('../data/meshdata', args.object_code_list[i], 'coacd/decomposed.obj'))
 
 print(f"🎉 成功保存所有抓取数据到: {result_path}")

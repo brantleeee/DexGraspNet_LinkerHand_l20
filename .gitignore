@@ -3,6 +3,24 @@ meshdata
 experiments
 graspdata
 dataset
+!assets/shadowhand_official/data/dataset/
+!assets/shadowhand_official/data/meshdata/
 
 # Caches
 __pycache__
+.venv_l20/
+.venv_isaacgym/
+external/isaacgym/
+external/python_isaacgym/
+thirdparty/pytorch_kinematics/build/
+
+# Local simulation installs, experiments and generated reports
+external/
+data/isaacsim_l20/
+data/mjlab_grasp/
+data/reports/
+MUJOCO_LOG.TXT
+*.bak_before_*
+*.bak_torch27
+]
+.pytest_cache/

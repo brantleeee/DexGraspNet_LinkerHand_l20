@@ -9,12 +9,13 @@
 import os
 from setuptools import setup, find_packages, dist
 import importlib
-from pkg_resources import parse_version
+from packaging.version import parse as parse_version
 import subprocess
 import warnings
 
 TORCH_MIN_VER = '1.5.0'
 TORCH_MAX_VER = '1.12.1'
+IGNORE_TORCH_VER = os.getenv("IGNORE_TORCH_VER", "0") == "1"
 
 # Module required before installation
 # trying to install it ahead turned out to be too unstable.
@@ -170,8 +171,8 @@ if __name__ == '__main__':
         license=LICENSE,
 
         # Package info
-        # packages=find_packages(exclude=('tests')),
-        # include_package_data=True,
+        packages=find_packages(exclude=('tests', 'tests.*')),
+        include_package_data=True,
         zip_safe=False,
         ext_modules=get_extensions(),
         cmdclass={

@@ -16,6 +16,7 @@ import trimesh as tm
 from torchsdf import index_vertices_by_faces, compute_sdf
 # 🔥 新增导入，用于正确解析 URDF 限位
 from urdf_parser_py.urdf import URDF
+from utils.joint_constraints import JointConstraints
 
 
 def resolve_mesh_file(mesh_path, mesh_name):
@@ -332,6 +333,13 @@ class HandModel:
             raise RuntimeError(f"No movable joints found in URDF: {model_path}")
 
         self.n_dofs = len(self.joints_names)
+        mimics = [(j.name, j.mimic.joint,
+                   j.mimic.multiplier if j.mimic.multiplier is not None else 1.,
+                   j.mimic.offset if j.mimic.offset is not None else 0.)
+                  for j in robot.joints if j.type != 'fixed' and j.mimic is not None]
+        self.joint_constraints = JointConstraints(
+            self.joints_names, [limit_dict[n][0] for n in self.joints_names],
+            [limit_dict[n][1] for n in self.joints_names], mimics, device)
 
         # ------------------------------------------------------------------
         # Surface points

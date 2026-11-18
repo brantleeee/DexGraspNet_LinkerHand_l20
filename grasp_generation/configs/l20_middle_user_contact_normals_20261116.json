@@ -1,0 +1,127 @@
+{
+  "schema": "l20-user-contact-normal-v1",
+  "coordinate_frame": "middle_distal",
+  "source_frames": "/home/lee/DexGraspNet_LinkerHand_l20/data/experiments/l20_contact_middle_distal_frame_20261116/contact_frames.json",
+  "source_frames_sha256": "ff44613a2f7753521347df92edeea2290c995ea9d45367430cd1105e3cfc9f24",
+  "asset_hashes": {
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/linkerhand_l20_right.urdf": "c74af5c7d09ae140707c3849560e967c3e7234585dada60172047a9f46447472",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/contact_points.json": "ea0c34a50ed7bf174525cf443a6c1a15913bdab4a93070ff4f6e215072058715",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/base_link.STL": "bcb87038aee7e2b1ce4c9058eda853cab7447a48f6daf199eece02bfd6f2f5b5",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/pinky_metacarpals.STL": "2fe05498b5a8201219be33d94b0a4fdbdd41bd9190f0c3f9fc72ccfc73d7fb64",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/pinky_proximal.STL": "735e59053b8459d028ea695a02f842b567302e23ef32a934e6e6b69446fb6372",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/pinky_middle.STL": "0daf7b29e316118765b675976de01c48e781be9b515e0a41adcb4b856432f757",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/pinky_distal.STL": "8e5360b5120a73f131a0cccd65814138f56f323a4344b4f4c88bf29d082c8214",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/ring_metacarpals.STL": "4503b1302b1adce2eda9f60de1727a7e481aff0a50bfdd24dd1756b904ca1224",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/ring_proximal.STL": "93cc3baf41e18ae5705844a5458a6c6709eb359f947414d9611709680686c96a",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/ring_middle.STL": "1d009c89043ccf3d94064d51cfa1fb04d7daa960a6a37e381866ca73961d3fe0",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/ring_distal.STL": "e465ad35e35f23555f6a9e2f7cdfd0af322e878b29db4ede5ecd800c334e6c52",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/middle_metacarpals.STL": "172f41269341fb6cadd47bec8dc4cc9cc38df8bc17cb24f107dfc1517c6aeceb",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/middle_proximal.STL": "1ba251692df1187eef864b28d00cdb3513d5b931fef231ce386cf2e100b63940",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/middle_middle.STL": "cf17f473febce710a6d570a0f1afe2f1ba46c26bf103bacfd2915646427e46e1",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/middle_distal.STL": "cdf519b1a6c38610f47f4cc8bce4dafa5b68b3f90e83f0f87456f38a1611ed0d",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/index_metacarpals.STL": "c1266bde683bf0bb04f5c25b2411a63dc680e25bac6c5d31635aef93f1329a84",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/index_proximal.STL": "d69b2edf389bcf55364d163692d4ddced3098b1e50822a585612b2f112f60562",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/index_middle.STL": "cadab94ae419b76a563526a1b69db78ea780b01d56b8122fd7d04419fcf7201a",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/index_distal.STL": "7d2f75f7b99d8ce0f3e75f92ffe0986b161c214af6608e392a43459c5331a0b0",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_metacarpals_base1.STL": "0a0631972979aeade00c1cc607b9acfdc9deb2f2611e2f0faceb1d9c08d256de",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_metacarpals_base2.STL": "0dacf81bae8eb994266d736fa54e0b7d9d16ea1209ec0194fc5aae39c3aa8c69",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_metacarpals.STL": "ef6696980669c5c5e3899917ba1837a07399301b1497464bec36b5713980e946",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_proximal.STL": "ce43b3d2133f3519a1e8db4ccda2a3dd4fb72302ae181ff04f53744e8397f3bb",
+    "/home/lee/DexGraspNet_LinkerHand_l20/grasp_generation/mjcf/meshes/thumb_distal.STL": "20331a2b2ec816f8bde3fcb20e14f9ec308cd7f3ec655659354c489ee9242e45"
+  },
+  "note": "User-confirmed contact-direction override. Does not change STL facet normals, object SDF normals or generation E_fc. Rules refer only to the frozen source frame.",
+  "points": {
+    "211": {
+      "rule": "T2",
+      "N": [
+        0.29450265179832924,
+        -0.26219958630212137,
+        0.9189774562124734
+      ],
+      "reference_N": [
+        0.9522709476354412,
+        -0.00028664533270595104,
+        -0.30525392728669715
+      ],
+      "reference_T1": [
+        0.0803008740503551,
+        0.9650136241408458,
+        0.2496006307069342
+      ],
+      "reference_T2": [
+        0.29450265179832924,
+        -0.26219958630212137,
+        0.9189774562124734
+      ]
+    },
+    "219": {
+      "rule": "-T1",
+      "N": [
+        0.29413464616749296,
+        -0.2628723631707816,
+        0.9189031127409095
+      ],
+      "reference_N": [
+        0.9524453632279424,
+        0.0005676983096153694,
+        -0.30470889022839853
+      ],
+      "reference_T1": [
+        -0.29413464616749296,
+        0.2628723631707816,
+        -0.9189031127409095
+      ],
+      "reference_T2": [
+        0.07957788630968209,
+        0.964830450597222,
+        0.25053854316421126
+      ]
+    },
+    "228": {
+      "rule": "-T1",
+      "N": [
+        0.3478464368755303,
+        0.0009186907241831319,
+        0.9375510718677416
+      ],
+      "reference_N": [
+        0.9375514997950697,
+        -0.00012334185851273034,
+        -0.3478464747827719
+      ],
+      "reference_T1": [
+        -0.3478464368755303,
+        -0.0009186907241831319,
+        -0.9375510718677416
+      ],
+      "reference_T2": [
+        -0.00020392403816796455,
+        0.9999995703969773,
+        -0.0009042238923069728
+      ]
+    },
+    "231": {
+      "rule": "T2",
+      "N": [
+        0.45688434044555276,
+        -0.2529290500989937,
+        0.8528092372105577
+      ],
+      "reference_N": [
+        0.8814945358440066,
+        0.000195667208495112,
+        -0.4721941814460475
+      ],
+      "reference_T1": [
+        0.11926475897259682,
+        0.9674848098706069,
+        0.22304497290197803
+      ],
+      "reference_T2": [
+        0.45688434044555276,
+        -0.2529290500989937,
+        0.8528092372105577
+      ]
+    }
+  }
+}

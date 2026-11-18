@@ -30,11 +30,18 @@ def initialize_convex_hull(hand_model, object_model, args):
         faces = mesh_origin.faces
         vertices *= object_model.object_scale_tensor[i].max().item()
         mesh_origin = tm.Trimesh(vertices, faces)
-        mesh_origin.faces = mesh_origin.faces[mesh_origin.remove_degenerate_faces()]
+        mesh_origin.update_faces(mesh_origin.nondegenerate_faces())
         
         # 安全补丁：防止除0
         norm = np.linalg.norm(vertices, axis=1, keepdims=True)
-        vertices += 0.2 * vertices / np.maximum(norm, 1e-8)
+        # DexGraspNet Section III intentionally expands the hull by 0.2 m.
+        # The scale-aware branch is an L20 small-object experiment, not a
+        # correction of the original method.
+        if args.hull_inflation == 'paper':
+            shell = 0.2
+        else:
+            shell = float(np.clip(0.3 * mesh_origin.extents.min(), 0.005, 0.02))
+        vertices += shell * vertices / np.maximum(norm, 1e-8)
         
         mesh = tm.Trimesh(vertices=vertices, faces=faces).convex_hull
         vertices = torch.tensor(mesh.vertices, dtype=torch.float, device=device)
@@ -46,6 +53,11 @@ def initialize_convex_hull(hand_model, object_model, args):
         p = pytorch3d.ops.sample_farthest_points(dense_point_cloud, K=batch_size_each)[0][0]
         closest_points, _, _ = mesh_origin.nearest.on_surface(p.detach().cpu().numpy())
         closest_points = torch.tensor(closest_points, dtype=torch.float, device=device)
+        # Uniformly scaled surfaces have correspondingly scaled nearest points.
+        # Place each candidate around its OWN object, not the batch's largest one.
+        scale_ratio = object_model.object_scale_tensor[i] / object_model.object_scale_tensor[i].max()
+        p = p * scale_ratio[:, None]
+        closest_points = closest_points * scale_ratio[:, None]
         
         diff = closest_points - p
         n = diff / diff.norm(dim=1).clamp_min(1e-8).unsqueeze(1)
@@ -146,8 +158,10 @@ def initialize_convex_hull(hand_model, object_model, args):
     ], dim=1)
 
     # 🔥 核心修复：必须告诉 PyTorch 这个变量是要求导优化的
+    hand_pose = hand_model.joint_constraints.project(hand_pose)
     hand_pose.requires_grad_()
     # =========================================================================
 
-    contact_point_indices = torch.randint(hand_model.n_contact_candidates, size=[total_batch_size, args.n_contact], device=device)
+    from .contact_sampling import sample_contacts
+    contact_point_indices = sample_contacts(hand_model,total_batch_size,args.n_contact)
     hand_model.set_parameters(hand_pose, contact_point_indices)

@@ -44,7 +44,7 @@ class ObjectModel:
         self.object_face_verts_list = None
         self.scale_choice = torch.tensor([0.06, 0.08, 0.1, 0.12, 0.15], dtype=torch.float, device=self.device)
 
-    def initialize(self, object_code_list):
+    def initialize(self, object_code_list, scales=None):
         """
         Initialize Object Model with list of objects
         
@@ -54,23 +54,42 @@ class ObjectModel:
         ----------
         object_code_list: list | str
             list of object codes
+        scales: list[float] | None
+            Explicit uniform mesh scales, distributed evenly across candidates.
+            None preserves the legacy random scale selection.
         """
         if not isinstance(object_code_list, list):
             object_code_list = [object_code_list]
+        explicit_scales = None
+        if scales is not None:
+            values = np.asarray(scales, dtype=float)
+            if values.ndim != 1 or not len(values) or not np.isfinite(values).all() or (values <= 0).any():
+                raise ValueError('Object scales must be a nonempty list of finite positive values')
+            if len(np.unique(values)) != len(values):
+                raise ValueError('Object scales must be distinct')
+            if len(values) > self.batch_size_each:
+                raise ValueError('Batch size must include at least one candidate per scale')
+            explicit_scales = torch.tensor(values, dtype=torch.float, device=self.device)
         self.object_code_list = object_code_list
         self.object_scale_tensor = []
         self.object_mesh_list = []
         self.object_face_verts_list = []
         self.surface_points_tensor = []
         for object_code in object_code_list:
-            self.object_scale_tensor.append(self.scale_choice[torch.randint(0, self.scale_choice.shape[0], (self.batch_size_each, ), device=self.device)])
+            if explicit_scales is None:
+                selected_scales = self.scale_choice[torch.randint(0, self.scale_choice.shape[0], (self.batch_size_each,), device=self.device)]
+            else:
+                indices = torch.arange(self.batch_size_each, device=self.device) % len(explicit_scales)
+                indices = indices[torch.randperm(self.batch_size_each, device=self.device)]
+                selected_scales = explicit_scales[indices]
+            self.object_scale_tensor.append(selected_scales)
             self.object_mesh_list.append(tm.load(os.path.join(self.data_root_path, object_code, "coacd", "decomposed.obj"), force="mesh", process=False))
             object_verts = torch.Tensor(self.object_mesh_list[-1].vertices).to(self.device)
             object_faces = torch.Tensor(self.object_mesh_list[-1].faces).long().to(self.device)
             self.object_face_verts_list.append(index_vertices_by_faces(object_verts, object_faces))
             if self.num_samples != 0:
                 vertices = torch.tensor(self.object_mesh_list[-1].vertices, dtype=torch.float, device=self.device)
-                faces = torch.tensor(self.object_mesh_list[-1].faces, dtype=torch.float, device=self.device)
+                faces = torch.tensor(self.object_mesh_list[-1].faces, dtype=torch.long, device=self.device)
                 mesh = pytorch3d.structures.Meshes(vertices.unsqueeze(0), faces.unsqueeze(0))
                 dense_point_cloud = pytorch3d.ops.sample_points_from_meshes(mesh, num_samples=100 * self.num_samples)
                 surface_points = pytorch3d.ops.sample_farthest_points(dense_point_cloud, K=self.num_samples)[0][0]

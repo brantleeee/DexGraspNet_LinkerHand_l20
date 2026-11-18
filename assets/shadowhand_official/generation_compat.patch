@@ -1,0 +1,105 @@
+diff --git a/grasp_generation/main.py b/grasp_generation/main.py
+index daf751c..b031487 100644
+--- a/grasp_generation/main.py
++++ b/grasp_generation/main.py
+@@ -30,7 +30,7 @@ from utils.rot6d import robust_compute_rotation_matrix_from_ortho6d
+ parser = argparse.ArgumentParser()
+ # experiment settings
+ parser.add_argument('--seed', default=1, type=int)
+-parser.add_argument('--gpu', default="2", type=str)
++parser.add_argument('--gpu', default="0", type=str)
+ parser.add_argument('--object_code_list', default=
+     [
+         'sem-Car-2f28e2bd754977da8cfac9da0ff28f62',
+@@ -38,8 +38,10 @@ parser.add_argument('--object_code_list', default=
+         'sem-Car-669043a8ce40d9d78781f76a6db4ab62',
+         'sem-Car-58379002fbdaf20e61a47cff24512a0',
+         'sem-Car-aeeb2fb31215f3249acee38782dd9680',
+-    ], type=list)
++    ], nargs='+')
+ parser.add_argument('--name', default='exp_2', type=str)
++parser.add_argument('--scale', default=None, type=float,
++                    help='Use one exact object scale for every generated candidate')
+ parser.add_argument('--n_contact', default=4, type=int)
+ parser.add_argument('--batch_size', default=128, type=int)
+ parser.add_argument('--n_iter', default=6000, type=int)
+@@ -67,6 +69,12 @@ parser.add_argument('--thres_dis', default=0.005, type=float)
+ parser.add_argument('--thres_pen', default=0.001, type=float)
+ 
+ args = parser.parse_args()
++if args.scale is not None and (not np.isfinite(args.scale) or args.scale <= 0):
++    parser.error('--scale must be finite and positive')
++if args.batch_size < 1 or args.n_iter < 1:
++    parser.error('batch_size and n_iter must be positive')
++if os.path.exists(os.path.join('../data/experiments', args.name)):
++    parser.error('Experiment already exists; choose a new --name')
+ 
+ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+ 
+@@ -97,6 +105,8 @@ object_model = ObjectModel(
+     num_samples=2000, 
+     device=device
+ )
++if args.scale is not None:
++    object_model.scale_choice = torch.tensor([args.scale], dtype=torch.float, device=device)
+ object_model.initialize(args.object_code_list)
+ 
+ initialize_convex_hull(hand_model, object_model, args)
+@@ -195,13 +205,13 @@ for i in range(len(args.object_code_list)):
+         hand_pose = hand_model.hand_pose[idx].detach().cpu()
+         qpos = dict(zip(joint_names, hand_pose[9:].tolist()))
+         rot = robust_compute_rotation_matrix_from_ortho6d(hand_pose[3:9].unsqueeze(0))[0]
+-        euler = transforms3d.euler.mat2euler(rot, axes='sxyz')
++        euler = transforms3d.euler.mat2euler(rot.numpy(), axes='sxyz')
+         qpos.update(dict(zip(rot_names, euler)))
+         qpos.update(dict(zip(translation_names, hand_pose[:3].tolist())))
+         hand_pose = hand_pose_st[idx].detach().cpu()
+         qpos_st = dict(zip(joint_names, hand_pose[9:].tolist()))
+         rot = robust_compute_rotation_matrix_from_ortho6d(hand_pose[3:9].unsqueeze(0))[0]
+-        euler = transforms3d.euler.mat2euler(rot, axes='sxyz')
++        euler = transforms3d.euler.mat2euler(rot.numpy(), axes='sxyz')
+         qpos_st.update(dict(zip(rot_names, euler)))
+         qpos_st.update(dict(zip(translation_names, hand_pose[:3].tolist())))
+         data_list.append(dict(
+diff --git a/grasp_generation/utils/initializations.py b/grasp_generation/utils/initializations.py
+index 4e90373..4d69d95 100644
+--- a/grasp_generation/utils/initializations.py
++++ b/grasp_generation/utils/initializations.py
+@@ -44,11 +44,11 @@ def initialize_convex_hull(hand_model, object_model, args):
+         faces = mesh_origin.faces
+         vertices *= object_model.object_scale_tensor[i].max().item()
+         mesh_origin = tm.Trimesh(vertices, faces)
+-        mesh_origin.faces = mesh_origin.faces[mesh_origin.remove_degenerate_faces()]
++        mesh_origin.update_faces(mesh_origin.nondegenerate_faces())
+         vertices += 0.2 * vertices / np.linalg.norm(vertices, axis=1, keepdims=True)
+         mesh = tm.Trimesh(vertices=vertices, faces=faces).convex_hull
+         vertices = torch.tensor(mesh.vertices, dtype=torch.float, device=device)
+-        faces = torch.tensor(mesh.faces, dtype=torch.float, device=device)
++        faces = torch.tensor(mesh.faces, dtype=torch.long, device=device)
+         mesh_pytorch3d = pytorch3d.structures.Meshes(vertices.unsqueeze(0), faces.unsqueeze(0))
+ 
+         # sample points
+@@ -74,8 +74,8 @@ def initialize_convex_hull(hand_model, object_model, args):
+         rotation_local = torch.zeros([batch_size_each, 3, 3], dtype=torch.float, device=device)
+         rotation_global = torch.zeros([batch_size_each, 3, 3], dtype=torch.float, device=device)
+         for j in range(batch_size_each):
+-            rotation_local[j] = torch.tensor(transforms3d.euler.euler2mat(process_theta[j], deviate_theta[j], rotate_theta[j], axes='rzxz'), dtype=torch.float, device=device)
+-            rotation_global[j] = torch.tensor(transforms3d.euler.euler2mat(math.atan2(n[j, 1], n[j, 0]) - math.pi / 2, -math.acos(n[j, 2]), 0, axes='rzxz'), dtype=torch.float, device=device)
++            rotation_local[j] = torch.tensor(transforms3d.euler.euler2mat(process_theta[j].item(), deviate_theta[j].item(), rotate_theta[j].item(), axes='rzxz'), dtype=torch.float, device=device)
++            rotation_global[j] = torch.tensor(transforms3d.euler.euler2mat(math.atan2(n[j, 1].item(), n[j, 0].item()) - math.pi / 2, -math.acos(np.clip(n[j, 2].item(), -1, 1)), 0, axes='rzxz'), dtype=torch.float, device=device)
+         translation[i * batch_size_each: (i + 1) * batch_size_each] = p - distance.unsqueeze(1) * (rotation_global @ rotation_local @ torch.tensor([0, 0, 1], dtype=torch.float, device=device).reshape(1, -1, 1)).squeeze(2)
+         rotation_hand = torch.tensor(transforms3d.euler.euler2mat(0, -np.pi / 3, 0, axes='rzxz'), dtype=torch.float, device=device)
+         rotation[i * batch_size_each: (i + 1) * batch_size_each] = rotation_global @ rotation_local @ rotation_hand
+diff --git a/grasp_generation/utils/object_model.py b/grasp_generation/utils/object_model.py
+index 556caa3..a45bf66 100644
+--- a/grasp_generation/utils/object_model.py
++++ b/grasp_generation/utils/object_model.py
+@@ -70,7 +70,7 @@ class ObjectModel:
+             self.object_face_verts_list.append(index_vertices_by_faces(object_verts, object_faces))
+             if self.num_samples != 0:
+                 vertices = torch.tensor(self.object_mesh_list[-1].vertices, dtype=torch.float, device=self.device)
+-                faces = torch.tensor(self.object_mesh_list[-1].faces, dtype=torch.float, device=self.device)
++                faces = torch.tensor(self.object_mesh_list[-1].faces, dtype=torch.long, device=self.device)
+                 mesh = pytorch3d.structures.Meshes(vertices.unsqueeze(0), faces.unsqueeze(0))
+                 dense_point_cloud = pytorch3d.ops.sample_points_from_meshes(mesh, num_samples=100 * self.num_samples)
+                 surface_points = pytorch3d.ops.sample_farthest_points(dense_point_cloud, K=self.num_samples)[0][0]

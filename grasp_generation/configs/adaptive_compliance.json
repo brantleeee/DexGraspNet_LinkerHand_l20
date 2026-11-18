@@ -1,0 +1,18 @@
+{
+  "force_target": 2.0,
+  "stiffness_min": 0.25,
+  "stiffness_contact": 1.5,
+  "stiffness_free": 5.0,
+  "stiffness_rise_rate": 2.0,
+  "stiffness_fall_rate": 250.0,
+  "damping_min": 0.015,
+  "damping_max": 0.2,
+  "damping_ratio": 1.2,
+  "force_filter_time": 0.015,
+  "closure_rate": 0.25,
+  "middle_stiffness_multiplier": 1.2,
+  "middle_closure_rate_multiplier": 1.5,
+  "release_rate": 0.4,
+  "max_close_offset": 0.25,
+  "max_release_offset": 0.15
+}

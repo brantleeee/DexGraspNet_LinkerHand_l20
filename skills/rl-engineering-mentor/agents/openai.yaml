@@ -1,0 +1,4 @@
+interface:
+  display_name: "强化学习工程导师"
+  short_description: "结合本项目实测日志、代码和六方向评估，讲解强化学习工程问题及验证方法"
+  default_prompt: "使用 $rl-engineering-mentor 分析本项目当前实验，解释证据、原因假设、最小验证方案和需要掌握的工程能力。"

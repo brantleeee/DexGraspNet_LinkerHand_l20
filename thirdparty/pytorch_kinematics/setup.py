@@ -1,9 +1,9 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 
 setup(
     name='pytorch_kinematics',
     version='0.3.0',
-    packages=['pytorch_kinematics'],
+    packages=find_packages(),
     url='https://github.com/UM-ARM-Lab/pytorch_kinematics',
     license='MIT',
     author='zhsh',
